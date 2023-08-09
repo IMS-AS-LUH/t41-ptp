@@ -1,0 +1,31 @@
+name: Compile Examples
+
+# The workflow will run on every push and pull request to the repository
+on:
+  - push
+  - pull_request
+
+jobs:
+  compile-sketch:
+    runs-on: ubuntu-latest
+
+    steps:
+      # This step makes the contents of the repository available to the workflow
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # For more information: https://github.com/arduino/compile-sketches#readme
+      - name: Compile sketch
+        uses: arduino/compile-sketches@v1
+        with:
+          platforms: |
+            - name: "teensy:avr"
+              source-url: "https://www.pjrc.com/teensy/package_teensy_index.json"
+          fqbn: teensy:avr:teensy41
+          sketch-paths: |
+            # Configure the action to search all folders under the root of the repository for sketches and compile them.
+            # This is formatted as a YAML list, which makes it possible to have multiple sketch paths if needed.
+            - ./
+          libraries: |
+            - source-path: ./
+            - source-url: "https://github.com/HedgeHawk/QNEthernet.git"
