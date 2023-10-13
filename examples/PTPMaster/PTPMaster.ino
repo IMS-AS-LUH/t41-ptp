@@ -21,7 +21,7 @@ Serial.begin(2000000);
   pinMode(13, OUTPUT);
 
   // Setup networking
-  qindesign::network::Ethernet.setHostname("t41ptpslave");
+  qindesign::network::Ethernet.setHostname("t41ptpmaster");
   qindesign::network::Ethernet.macAddress(mac);
   qindesign::network::Ethernet.begin(staticIP, subnetMask, gateway);
   qindesign::network::EthernetIEEE1588.begin();

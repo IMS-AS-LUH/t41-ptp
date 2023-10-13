@@ -297,7 +297,7 @@ NanoTime PTPBase::getDelay()
 void PTPBase::parsePTPMessage(const uint8_t *buf, int size, const timespec &recv_ts)
 {
     const uint8_t messageType = buf[0] & 0x0f;
-    const uint8_t versionPTP = buf[1];
+    const uint8_t versionPTP = buf[1] & 0x0f;
     const uint8_t domainNumer = buf[4];
     if(versionPTP==2){
         if (logging >= 2)
