@@ -23,13 +23,20 @@ This library was created by the Architectures and Systems Group of the Institute
 ### Examples
 We provide examples for a Teensy 4.1 to act as PTP Slave and PTP Master 
 
+### Test Setup
+A GPS module ([Adafruit Ultimate GPS](https://www.adafruit.com/product/746)) is connected to the PTP Master ([Teensy 4.1](https://www.pjrc.com/store/teensy41.html)) via a PPS signal. The PTP Slave ([Teensy 4.1](https://www.pjrc.com/store/teensy41.html)) is synchronized to the PTP Master via a [network connection](https://www.pjrc.com/store/ethernet_kit.html).
+![Setup](/doc/1.jpg?raw=true)
+
 ## Citation
 If you use our PTP library (or parts of it) in scientific work,
 please cite our upcoming paper (**not published yet**).
 
-    @unpublished{schleusner2024bare,
-     title={A Bare-Metal Implementation of the Precision Time Protocol for Microcontrollers},
-     author={Jens Schleusner, Christian Fahnemann, Richard Pfleiderer, Holger Blume},
+    @unpublished{schleusner2024sub,
+     title={Sub-Microsecond Time Synchronization for Network-Connected Microcontrollers},
+     author={Jens Schleusner and Christian Fahnemann and Richard Pfleiderer and Holger Blume},
+     booktitle="2024 IEEE International Conference on Consumer Electronics (ICCE) (2024 ICCE)",
+     month=jan,
+     year=2024,
     }
 
 The correct precise citation will be updated as soon as possible.
