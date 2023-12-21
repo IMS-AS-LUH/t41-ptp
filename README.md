@@ -1,7 +1,7 @@
 ![example workflow](https://github.com/IMS-AS-LUH/t41-ptp/actions/workflows/compile-examples.yml/badge.svg)
 
 # t41-ptp
-This repository provides the source code for our research paper "A Bare-Metal Implementation of the
+This [repository](https://github.com/IMS-AS-LUH/t41-ptp) provides the source code for our research paper "A Bare-Metal Implementation of the
 Precision Time Protocol for Microcontrollers". This Arduino compatible library has been created to provide high precision time synchronization for the Teensy 4.1 microcontroller platform.
 
 This library was created by the Architectures and Systems Group of the Institute of Microelectronic Systems ([IMS/AS](https://www.ims.uni-hannover.de/de/institut/architekturen-und-systeme/)) at the [Leibniz University](https://www.uni-hannover.de) in Germany.
