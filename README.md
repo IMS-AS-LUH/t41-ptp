@@ -1,8 +1,7 @@
 ![example workflow](https://github.com/IMS-AS-LUH/t41-ptp/actions/workflows/compile-examples.yml/badge.svg)
 
 # t41-ptp
-This [repository](https://github.com/IMS-AS-LUH/t41-ptp) provides the source code for our research paper "A Bare-Metal Implementation of the
-Precision Time Protocol for Microcontrollers". This Arduino compatible library has been created to provide high precision time synchronization for the Teensy 4.1 microcontroller platform.
+This [repository](https://github.com/IMS-AS-LUH/t41-ptp) provides the source code for our research paper "Sub-Microsecond Time Synchronization for Network-Connected Microcontrollers". This Arduino compatible library has been created to provide high precision time synchronization for the Teensy 4.1 microcontroller platform.
 
 This library was created by the Architectures and Systems Group of the Institute of Microelectronic Systems ([IMS/AS](https://www.ims.uni-hannover.de/de/institut/architekturen-und-systeme/)) at the [Leibniz University](https://www.uni-hannover.de) in Germany.
 
@@ -29,7 +28,7 @@ A GPS module ([Adafruit Ultimate GPS](https://www.adafruit.com/product/746)) is 
 
 ## Citation
 If you use our PTP library (or parts of it) in scientific work,
-please cite our upcoming paper (**not published yet**).
+please cite our paper (not published yet).
 
     @unpublished{schleusner2024sub,
      title={Sub-Microsecond Time Synchronization for Network-Connected Microcontrollers},
