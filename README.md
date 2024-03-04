@@ -30,12 +30,14 @@ A GPS module ([Adafruit Ultimate GPS](https://www.adafruit.com/product/746)) is 
 If you use our PTP library (or parts of it) in scientific work,
 please cite our paper (not published yet).
 
-    @unpublished{schleusner2024sub,
+    @inproceedings{schleusner2024sub,
      title={Sub-Microsecond Time Synchronization for Network-Connected Microcontrollers},
-     author={Jens Schleusner and Christian Fahnemann and Richard Pfleiderer and Holger Blume},
-     booktitle="2024 IEEE International Conference on Consumer Electronics (ICCE) (2024 ICCE)",
+     author={Schleusner, Jens and Fahnemann, Christian and Pfleiderer, Richard and Blume, Holger},
+     booktitle={2024 IEEE International Conference on Consumer Electronics (ICCE)},
      month=jan,
      year=2024,
+     keywords={Microcontrollers;Hardware;Synchronization;Phase locked loops;Standards;Global Positioning System;Clocks;PTP;Precision Time Protocol;Microcontroller;Embedded System;TSN;Time Sensitive Networking},
+     doi={10.1109/ICCE59016.2024.10444401}
     }
 
 The correct precise citation will be updated as soon as possible.
