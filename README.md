@@ -1,7 +1,7 @@
 ![example workflow](https://github.com/IMS-AS-LUH/t41-ptp/actions/workflows/compile-examples.yml/badge.svg)
 
 # t41-ptp
-This [repository](https://github.com/IMS-AS-LUH/t41-ptp) provides the source code for our research paper "Sub-Microsecond Time Synchronization for Network-Connected Microcontrollers". This Arduino compatible library has been created to provide high precision time synchronization for the Teensy 4.1 microcontroller platform.
+This [repository](https://github.com/IMS-AS-LUH/t41-ptp) provides the source code for our research paper "Sub-Microsecond Time Synchronization for Network-Connected Microcontrollers" ([Final published article](https://doi.org/10.1109/ICCE59016.2024.10444401), [Open Access: accepted version](https://doi.org/10.15488/16561)). This Arduino compatible library has been created to provide high precision time synchronization for the Teensy 4.1 microcontroller platform.
 
 This library was created by the Architectures and Systems Group of the Institute of Microelectronic Systems ([IMS/AS](https://www.ims.uni-hannover.de/de/institut/architekturen-und-systeme/)) at the [Leibniz University](https://www.uni-hannover.de) in Germany.
 
@@ -28,7 +28,7 @@ A GPS module ([Adafruit Ultimate GPS](https://www.adafruit.com/product/746)) is 
 
 ## Citation
 If you use our PTP library (or parts of it) in scientific work,
-please cite our ICCE 2024 paper.
+please cite our ICCE 2024 paper ([Final published article](https://doi.org/10.1109/ICCE59016.2024.10444401), [Open Access: accepted version](https://doi.org/10.15488/16561)).
 
     @inproceedings{schleusner2024sub,
      title={Sub-Microsecond Time Synchronization for Network-Connected Microcontrollers},
