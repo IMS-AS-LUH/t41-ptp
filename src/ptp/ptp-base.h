@@ -61,6 +61,7 @@ private:
     NanoTime t1last = -1;
     NanoTime t2 = -1;
     NanoTime t2last = -1;
+    NanoTime t2new = -1;
     NanoTime t3 = -1;
     NanoTime t4 = -1;
     NanoTime t5 = -1;

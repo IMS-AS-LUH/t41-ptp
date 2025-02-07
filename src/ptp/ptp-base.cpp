@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <QNEthernet.h>
 #include <TimeLib.h>
 #include "ptp-base.h"
@@ -116,7 +117,7 @@ void PTPBase::update()
             t4updated = false;
             t5updated = false;
             t6updated = false;
-            if (t1lastvalid && t2lastvalid)
+            if (t1lastvalid && t2lastvalid && syncSequenceID == followUpSequenceID)
             {
                 t1lastvalid = false;
                 t2lastvalid = false;
@@ -153,6 +154,7 @@ void PTPBase::reset()
     t1last = -1;
     t2 = -1;
     t2last = -1;
+    t2new = -1;
     t3 = -1;
     t4 = -1;
     t5 = -1;
@@ -188,43 +190,57 @@ void PTPBase::updateController()
     const double t1diff = (t1 - t1last);
     const double t2diff = (t2 - t2last);
     const double currentDrift = t2diff / t1diff;
+    const double currentDriftNsps = (1.0 - currentDrift) * NS_PER_S;
+    
+    // Max XTAL drift should be around 30ppm (30000ns/s). If drift is much higher (100000ns/s), master clock is most likely invalid due to severe adjustments
+    const bool driftError = currentDriftNsps > 100000 || currentDriftNsps < -100000; 
+    
+    const bool freqMode = currentDriftNsps > 1000 || currentDriftNsps < -1000;
     
     const bool coarseMode = currentOffset > 1000 || currentOffset < -1000;
-
-    const double currentDriftNsps = (1.0 - currentDrift) * NS_PER_S;
-
     const NanoTime offsetCorrection = -currentOffset;
-    t2 += offsetCorrection;
 
     double nspsAdjust = 0;
     double nspsAdjustC = 0;
     double nspsAdjustP = 0;
     double nspsAdjustI = 0;
 
-    if (coarseMode)
-    {
-        driftNSPS += currentDriftNsps;
-        nspsAdjustC = driftNSPS;
-        nspsAdjust = nspsAdjustC;
-        qindesign::network::EthernetIEEE1588.adjustFreq(nspsAdjust);
-        qindesign::network::EthernetIEEE1588.offsetTimer(offsetCorrection);
+    if(!driftError){
+        if(freqMode)
+        {
+            driftNSPS = fmod(driftNSPS + currentDriftNsps,NS_PER_S);
+            nspsAdjustC = driftNSPS;
+            nspsAdjust = nspsAdjustC;
+            qindesign::network::EthernetIEEE1588.adjustFreq(nspsAdjust);
+            nspsAccu = 0;
+        }
+        else if (coarseMode)
+        {
+            qindesign::network::EthernetIEEE1588.offsetTimer(offsetCorrection);
 
-        nspsAccu = 0;
+            nspsAccu = 0;
+            t2 += offsetCorrection;
+        }
+        else
+        {
+            nspsAccu += offsetCorrection;
+            nspsAdjustC = driftNSPS;
+            nspsAdjustP = (static_cast<double>(offsetCorrection) * KP);
+            nspsAdjustI = (static_cast<double>(nspsAccu) * KI);
+            nspsAdjust = nspsAdjustC + nspsAdjustP + nspsAdjustI;
+            qindesign::network::EthernetIEEE1588.adjustFreq(nspsAdjust);
+            t2 += offsetCorrection;
+        }
+    
+        if(!freqMode && !coarseMode && currentOffset < 100 && currentOffset > -100){
+        	lockcount++;
+        }else{
+        	lockcount=0;
+        }
     }
     else
     {
-        nspsAccu += offsetCorrection;
-        nspsAdjustC = driftNSPS;
-        nspsAdjustP = (static_cast<double>(offsetCorrection) * KP);
-        nspsAdjustI = (static_cast<double>(nspsAccu) * KI);
-        nspsAdjust = nspsAdjustC + nspsAdjustP + nspsAdjustI;
-        qindesign::network::EthernetIEEE1588.adjustFreq(nspsAdjust);
-    }
-    
-    if(currentOffset < 100 && currentOffset > -100){
-    	lockcount++;
-    }else{
-    	lockcount=0;
+        lockcount=0; //no lock if in driftError state
     }
 
     if (logging)
@@ -235,19 +251,34 @@ void PTPBase::updateController()
         Serial.printf("Delay:%dns ", (int)currentDelay);
         Serial.printf("Offset:%dns ", (int)currentOffset);
         Serial.printf("Drift:%dns \n", (int)currentDriftNsps);
-        if (coarseMode)
+
+        if(driftError)
         {
-            Serial.printf("Coarse Filter NSPS:%f", nspsAdjust);
+            Serial.printf("Drift Error\n No controller update.\n");
+        }
+        else if(freqMode)
+        {
+            Serial.printf("Freq mode adjust f: %f ns/s", nspsAdjust);
+        }
+        else if (coarseMode)
+        {
+            Serial.printf("Coarse mode adjust:%d ns", (int)offsetCorrection);
         }
         else
         {
-            Serial.printf("Fine   Filter NSPS:%f C:%f P(%f):%f I(%f):%f", nspsAdjust, nspsAdjustC, KP, nspsAdjustP, KI, nspsAdjustI);
+            Serial.printf("Fine filter mode ns/s:%f C:%f P(%f):%f I(%f):%f", nspsAdjust, nspsAdjustC, KP, nspsAdjustP, KI, nspsAdjustI);
         }
 
         Serial.println();
-        Serial.printf("ENET_ATINC %08X\n", ENET_ATINC);
-        Serial.printf("ENET_ATPER %d\n", ENET_ATPER);
-        Serial.printf("ENET_ATCOR %d (%f)\n", ENET_ATCOR, 25000000 / nspsAdjust);
+        if(!driftError)
+        {
+            Serial.printf("ENET_ATINC %08X\n", ENET_ATINC);
+            Serial.printf("ENET_ATPER %d\n", ENET_ATPER);
+            Serial.printf("ENET_ATCOR %d (%f)\n", ENET_ATCOR, 25000000 / nspsAdjust);
+        }
+        Serial.println();
+        Serial.println();
+        Serial.println();
     }
     else
     {
@@ -321,15 +352,12 @@ void PTPBase::parsePTPMessage(const uint8_t *buf, int size, const timespec &recv
 
 
 void PTPBase::setT2(NanoTime ts){
-    t2last = t2;
-    t2lastvalid = t2last > 0;
-    t2 = ts;
-    t2updated = true;
+    t2new = ts;
     
     if (logging)
     {
         Serial.print("T2 Sync  receive timestamp=");
-        printTime(t2);
+        printTime(t2new);
     }
 }
 
@@ -338,11 +366,10 @@ void PTPBase::parseSyncMessage(const uint8_t *buf, const timespec &recv_ts)
     const uint8_t twoStepFlag = buf[6] & 0x02;
     const uint16_t sequenceID = (buf[30] << 8) | buf[31];
 
-    if (twoStepFlag > 0) // Sync twoStep
+    if (twoStepFlag > 0 && sequenceID > 0) // Sync twoStep
     {	
     	setT2(timespecToNanoTime(recv_ts));
     	syncSequenceID = sequenceID;
-
     }
 }
 
@@ -352,6 +379,11 @@ void PTPBase::setT1(NanoTime ts){
     t1 = ts;
     t1updated = true;
     
+    t2last = t2; // Update T2 only if valid T1 data was received. Otherwise T2last and T1last might not be frrom the same sequenceID
+    t2lastvalid = t2last > 0;
+    t2 = t2new;
+    t2updated = true;
+
     if (logging)
     {
         Serial.print("T1 Sync  send    timestamp=");
@@ -362,8 +394,11 @@ void PTPBase::setT1(NanoTime ts){
 void PTPBase::parseFollowUpMessage(const uint8_t *buf)
 {
     const uint16_t sequenceID = (buf[30] << 8) | buf[31];
-    followUpSequenceID = sequenceID;
-    setT1(bufferToNanoTime(buf));
+    if(sequenceID > 0 && sequenceID == syncSequenceID)
+    {
+        followUpSequenceID = sequenceID;
+        setT1(bufferToNanoTime(buf));
+    }
 }
 
 void PTPBase::setT4(NanoTime ts){
