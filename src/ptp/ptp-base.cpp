@@ -44,6 +44,19 @@ NanoTime bufferToNanoTime(const uint8_t *buf)
     return (s * NS_PER_S) + ns;
 }
 
+NanoTime bufferToCorrection(const uint8_t *buf)
+{
+    NanoTime ns = ((NanoTime)buf[8]) << 56;
+    ns += ((NanoTime)buf[9]) << 48;
+    ns += ((NanoTime)buf[10]) << 40;
+    ns += ((NanoTime)buf[11]) << 32;
+    ns += ((NanoTime)buf[12]) << 24;
+    ns += ((NanoTime)buf[13]) << 16;
+    ns += ((NanoTime)buf[14]) << 8;
+    ns += ((NanoTime)buf[15]);
+    return (ns >> 16);
+}
+
 void timespecToBuffer(const timespec &tm, uint8_t *buf)
 {
     const NanoTime s = tm.tv_sec;
@@ -397,7 +410,11 @@ void PTPBase::parseFollowUpMessage(const uint8_t *buf)
     if(sequenceID > 0 && sequenceID == syncSequenceID)
     {
         followUpSequenceID = sequenceID;
-        setT1(bufferToNanoTime(buf));
+        setT1(bufferToNanoTime(buf)+bufferToCorrection(buf));
+        if (logging > 1)
+        {
+            Serial.printf("T1 corrected by %" PRId64 "\n", bufferToCorrection(buf));
+        }
     }
 }
 
@@ -417,9 +434,13 @@ void PTPBase::parseDelayResponseMessage(const uint8_t *buf, const timespec &recv
                                              (buf[48] == clockID[4]) && (buf[49] == clockID[5]) && (buf[50] == clockID[6]) && (buf[51] == clockID[7]);
     if (requestingPortIdentityMatch)
     {
-        setT4(bufferToNanoTime(buf));
+        setT4(bufferToNanoTime(buf)-bufferToCorrection(buf));
         t6 = timespecToNanoTime(recv_ts);
         t6updated = true;
+        if (logging > 1)
+        {
+            Serial.printf("T4 corrected by -%" PRId64 "\n", bufferToCorrection(buf));
+        }
         if (logging)
         {
             if(p2p){
