@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+title: t41-ptp
+message: >-
+  If you use our PTP library (or parts of it) in scientific
+  work, please cite our ICCE 2024 paper below.
+type: software
+authors:
+  - family-names: Schleusner
+    given-names: Jens
+  - family-names: Fahnemann
+    given-names: Christian
+  - family-names: Pfleiderer
+    given-names: Richard
+  - family-names: Blume
+    given-names: Holger
+repository-code: 'https://github.com/IMS-AS-LUH/t41-ptp'
+license: MIT
+preferred-citation:
+  type: conference-paper
+  title: Sub-Microsecond Time Synchronization for Network-Connected Microcontrollers
+  authors:
+    - family-names: Schleusner
+      given-names: Jens
+    - family-names: Fahnemann
+      given-names: Christian
+    - family-names: Pfleiderer
+      given-names: Richard
+    - family-names: Blume
+      given-names: Holger
+  collection-title: 2024 IEEE International Conference on Consumer Electronics (ICCE)
+  month: 1
+  year: 2024
+  doi: 10.1109/ICCE59016.2024.10444401
