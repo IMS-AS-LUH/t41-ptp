@@ -192,6 +192,51 @@ void PTPBase::setKi(double val)
     reset();
 }
 
+void PTPBase::setClockClass(uint8_t val)
+{
+    clockClass = val;
+}
+
+void PTPBase::setClockAccuracy(uint8_t val)
+{
+    clockAccuracy = val;
+}
+
+void PTPBase::setOffsetScaledLogVariance(uint16_t val)
+{
+    offsetScaledLogVariance = val;
+}
+
+void PTPBase::setPriority1(uint8_t val)
+{
+    priority1 = val;
+}
+
+void PTPBase::setPriority2(uint8_t val)
+{
+    priority2 = val;
+}
+
+void PTPBase::setTimeSource(uint8_t val)
+{
+    timeSource = val;
+}
+
+void PTPBase::setCurrentUtcOffset(int16_t val)
+{
+    currentUtcOffset = val;
+}
+
+void PTPBase::setLogSyncInterval(int8_t val)
+{
+    logSyncInterval = val;
+}
+
+void PTPBase::setLogAnnounceInterval(int8_t val)
+{
+    logAnnounceInterval = val;
+}
+
 void PTPBase::setKp(double val)
 {
     KP = val;
@@ -524,14 +569,15 @@ void PTPBase::announceMessage()
 
     initPTPMessage(buf, size, type, announceServerSequenceID++, control);
     buf[7]=8;//PTPTimescale
-    buf[33]=0;
-    buf[45]=37;//UTCOffset
-    buf[47]=128;
-    buf[48]=248;
-    buf[49]=0xfe;
-    buf[50]=0xff;
-    buf[51]=0xff;
-    buf[52]=128;
+    buf[33]=(uint8_t)logAnnounceInterval;
+    buf[44]=(currentUtcOffset >> 8) & 0xff;//UTCOffset
+    buf[45]=currentUtcOffset & 0xff;
+    buf[47]=priority1;
+    buf[48]=clockClass;
+    buf[49]=clockAccuracy;
+    buf[50]=(offsetScaledLogVariance >> 8) & 0xff;
+    buf[51]=offsetScaledLogVariance & 0xff;
+    buf[52]=priority2;
     buf[53] = clockID[0];
     buf[54] = clockID[1];
     buf[55] = clockID[2];
@@ -540,7 +586,7 @@ void PTPBase::announceMessage()
     buf[58] = clockID[5];
     buf[59] = clockID[6];
     buf[60] = clockID[7];
-    buf[63] = 0xa0;
+    buf[63] = timeSource;
     sendPTPMessage(buf,size,true);
 }
 
@@ -557,7 +603,7 @@ void PTPBase::syncMessage()
 
     initPTPMessage(buf, size, type, syncServerSequenceID, control);
     buf[6] =2;
-    buf[33]=0;
+    buf[33]=(uint8_t)logSyncInterval;
     qindesign::network::EthernetIEEE1588.timestampNextFrame();
     sendPTPMessage(buf,size,false);
     
@@ -601,7 +647,7 @@ void PTPBase::followUpMessage(const timespec &send_ts)
     uint8_t buf[size] = {0};
 
     initPTPMessage(buf, size, type, syncServerSequenceID, control);
-    buf[33]=0;
+    buf[33]=(uint8_t)logSyncInterval;
     timespecToBuffer(send_ts,buf);
     sendPTPMessage(buf,size,true);
 }
