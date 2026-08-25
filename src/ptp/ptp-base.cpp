@@ -192,6 +192,11 @@ void PTPBase::setKi(double val)
     reset();
 }
 
+void PTPBase::setUtcOffsetValid(bool val)
+{
+    utcOffsetValid = val;
+}
+
 void PTPBase::setKp(double val)
 {
     KP = val;
@@ -523,7 +528,8 @@ void PTPBase::announceMessage()
     uint8_t buf[size] = {0};
 
     initPTPMessage(buf, size, type, announceServerSequenceID++, control);
-    buf[7]=8;//PTPTimescale
+    // flagField octet 1: bit 3 PTPTimescale, bit 2 currentUtcOffsetValid
+    buf[7]=0x08 | (utcOffsetValid ? 0x04 : 0x00);
     buf[33]=0;
     buf[45]=37;//UTCOffset
     buf[47]=128;

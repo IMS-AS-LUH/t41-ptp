@@ -13,6 +13,10 @@ public:
     void reset();
     void setKi(double val);
     void setKp(double val);
+
+    // Sets the currentUtcOffsetValid flag advertised in Announce messages.
+    // Defaults to false, which is what this library has always sent.
+    void setUtcOffsetValid(bool val);
     NanoTime getOffset();
     NanoTime getDelay();
     void syncMessage();
@@ -51,6 +55,7 @@ private:
 
     uint8_t clockID[8];
     bool initialised=false;
+    bool utcOffsetValid=false;
     uint16_t delayRequestSequenceID = 0;
 	int lockcount=0;
     uint16_t syncSequenceID=0;
