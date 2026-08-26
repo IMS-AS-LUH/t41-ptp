@@ -340,6 +340,12 @@ NanoTime PTPBase::getDelay()
 
 void PTPBase::parsePTPMessage(const uint8_t *buf, int size, const timespec &recv_ts)
 {
+    // Nothing is read before the common header is known to be there.
+    if (size < PTP_HEADER_LEN)
+    {
+        return;
+    }
+
     const uint8_t messageType = buf[0] & 0x0f;
     const uint8_t versionPTP = buf[1] & 0x0f;
     const uint8_t domainNumer = buf[4];
@@ -348,16 +354,21 @@ void PTPBase::parsePTPMessage(const uint8_t *buf, int size, const timespec &recv
         {
             Serial.printf("PTPMessage messageType:%d versionPTP:%d domainNumer:%d\n", messageType, versionPTP, domainNumer);
         }
-        if(slave && messageType==0){
+        // Each type checks its own minimum before any field of it is
+        // touched: the common header is not enough for the ones that
+        // read as far as buf[51].
+        if(slave && messageType==0 && size >= PTP_SYNC_LEN){
             parseSyncMessage(buf,recv_ts);
-        }else if(master && messageType==1){
+        }else if(master && messageType==1 && size >= PTP_SYNC_LEN){
             parseDelayRequestMessage(buf,recv_ts);
         }
-        else if(slave && messageType == 8){
+        else if(slave && messageType == 8 && size >= PTP_SYNC_LEN){
             parseFollowUpMessage(buf);
-        }else if(slave && messageType==3 || messageType==9){
+        }else if(slave && messageType==3 && size >= PTP_DELAY_RESP_LEN){
             parseDelayResponseMessage(buf,recv_ts);
-        }else if(slave && messageType==10){
+        }else if(messageType==9 && size >= PTP_DELAY_RESP_LEN){
+            parseDelayResponseMessage(buf,recv_ts);
+        }else if(slave && messageType==10 && size >= PTP_DELAY_RESP_LEN){
             parseDelayResponseFollowUpMessage(buf);
         }
     }

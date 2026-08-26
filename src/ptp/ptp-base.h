@@ -4,6 +4,21 @@ using NanoTime = int64_t;
 
 constexpr NanoTime NS_PER_S = 1000*1000*1000;
 
+// Minimum lengths of a PTPv2 message, in bytes.
+//
+// parsePTPMessage was given the size of the datagram and never used it:
+// `size` appeared exactly once in the file, in the signature. The
+// parsers read up to buf[51], and the buffer they are handed is exactly
+// as long as the datagram received, so a one-byte UDP packet to the PTP
+// port made them read 51 bytes of adjacent stack -- and those bytes
+// became timestamps fed to the clock servo.
+//
+// PTP is open multicast with no authentication by design, so any device
+// on the network could send that packet.
+constexpr int PTP_HEADER_LEN = 34;          // common header
+constexpr int PTP_SYNC_LEN = 44;            // Sync, Delay_Req, Follow_Up
+constexpr int PTP_DELAY_RESP_LEN = 54;      // Delay_Resp, Pdelay_Resp_Follow_Up
+
 class PTPBase
 {
 public:
