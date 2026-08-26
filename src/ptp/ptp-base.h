@@ -4,6 +4,18 @@ using NanoTime = int64_t;
 
 constexpr NanoTime NS_PER_S = 1000*1000*1000;
 
+// How long to wait for the transmit timestamp before giving up.
+//
+// The two loops that waited for it had no timeout and no iteration cap:
+// if the hardware never produced it -- link down mid-transmit, a
+// dropped frame, any hiccup -- the firmware spun inside loop() forever
+// and everything stopped.
+//
+// A millisecond is far more than it takes: at 100 Mbit a 64-byte frame
+// is about 5 us and the MAC posts the timestamp right after. If it has
+// not arrived in a thousand times that, it is not going to.
+constexpr unsigned long TX_TIMESTAMP_TIMEOUT_US = 1000;
+
 class PTPBase
 {
 public:

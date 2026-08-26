@@ -567,12 +567,29 @@ void PTPBase::syncMessage()
     {
         Serial.print("Wait for T1s Delay send timestamp");
     }
-    while (!qindesign::network::EthernetIEEE1588.readAndClearTxTimestamp(send_ts))
+    bool haveTxTimestamp = false;
+    const unsigned long waitStart = micros();
+    while (!(haveTxTimestamp = qindesign::network::EthernetIEEE1588.readAndClearTxTimestamp(send_ts)))
     {
+        if (micros() - waitStart > TX_TIMESTAMP_TIMEOUT_US)
+        {
+            break;
+        }
         if (logging >= 2)
         {
             Serial.print(".");
         }
+    }
+    if (!haveTxTimestamp)
+    {
+        // With no timestamp there is nothing to publish. The exchange is
+        // abandoned rather than completed with an invented one: the next
+        // will pick it up, and until then no data beats false data.
+        if (logging)
+        {
+            Serial.println("No TX timestamp, skipping this exchange");
+        }
+        return;
     }
     if (logging >= 2)
     {
@@ -642,12 +659,29 @@ void PTPBase::delayRequestMessage()
     {
         Serial.print("Wait for T3 Delay send timestamp");
     }
-    while (!qindesign::network::EthernetIEEE1588.readAndClearTxTimestamp(send_ts))
+    bool haveTxTimestamp = false;
+    const unsigned long waitStart = micros();
+    while (!(haveTxTimestamp = qindesign::network::EthernetIEEE1588.readAndClearTxTimestamp(send_ts)))
     {
+        if (micros() - waitStart > TX_TIMESTAMP_TIMEOUT_US)
+        {
+            break;
+        }
         if (logging >= 2)
         {
             Serial.print(".");
         }
+    }
+    if (!haveTxTimestamp)
+    {
+        // With no timestamp there is nothing to publish. The exchange is
+        // abandoned rather than completed with an invented one: the next
+        // will pick it up, and until then no data beats false data.
+        if (logging)
+        {
+            Serial.println("No TX timestamp, skipping this exchange");
+        }
+        return;
     }
     if (logging >= 2)
     {
