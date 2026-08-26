@@ -89,7 +89,7 @@ void l2PTP::sendPTPMessage(const uint8_t *buf, int size, bool generalMessage)
     int w=qindesign::network::EthernetFrame.write(buf,size);
     const int fill = 46-w;
     if(fill>0){
-        uint8_t buf0[fill] = {0};
+        uint8_t buf0[46] = {0};
         w+=qindesign::network::EthernetFrame.write(buf0,fill);
     }
     bool sent=qindesign::network::EthernetFrame.endFrame();

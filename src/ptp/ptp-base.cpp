@@ -489,7 +489,7 @@ void PTPBase::delayResponseMessage(const uint8_t *request_buf, uint16_t sequence
     if(!initialised){
         return;
     }
-    uint16_t size=54;
+    constexpr uint16_t size = 54;
     uint8_t type=9;
     uint8_t control=3;
    
@@ -516,7 +516,7 @@ void PTPBase::announceMessage()
     if(!initialised || !master){
         return;
     }
-    uint16_t size=64;
+    constexpr uint16_t size = 64;
     uint8_t type=11;
     uint8_t control=5;
    
@@ -549,7 +549,7 @@ void PTPBase::syncMessage()
     if(!initialised || !master){
         return;
     }
-    uint16_t size=44;
+    constexpr uint16_t size = 44;
     uint8_t type=0;
     uint8_t control=0;
    
@@ -594,7 +594,7 @@ void PTPBase::followUpMessage(const timespec &send_ts)
     if(!initialised || !master){
         return;
     }
-    uint16_t size=44;
+    constexpr uint16_t size = 44;
     uint8_t type=8;
     uint8_t control=2;
    
@@ -630,7 +630,11 @@ void PTPBase::delayRequestMessage()
         size=54;
         control=5;
     }
-    uint8_t buf[size] = {0};
+    // A fixed buffer of the largest this can need, not a
+    // variable-length one: `size` is 44 or 54 depending on the branch
+    // above. A VLA also cannot be initialised in standard C++ -- clang
+    // rejects `uint8_t buf[size] = {0}` outright.
+    uint8_t buf[54] = {0};
 
     initPTPMessage(buf, size, type, delayRequestSequenceID, control);
     qindesign::network::EthernetIEEE1588.timestampNextFrame();
