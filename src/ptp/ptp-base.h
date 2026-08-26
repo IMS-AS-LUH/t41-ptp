@@ -26,6 +26,18 @@ protected:
     virtual void sendPTPMessage(const uint8_t *buf, int size, bool generalMessage)=0;
     
     void parsePTPMessage(const uint8_t *buf, int size, const timespec &recv_ts);
+
+public:
+    // How many sends have failed since boot.
+    //
+    // A grandmaster that cannot get its Sync messages out is a silent
+    // problem without this: a log line only helps if somebody is
+    // watching the serial port.
+    uint32_t getTxFailureCount() const { return txFailureCount; }
+
+protected:
+    uint32_t txFailureCount = 0;
+
     bool master;
     bool slave;
     bool p2p;

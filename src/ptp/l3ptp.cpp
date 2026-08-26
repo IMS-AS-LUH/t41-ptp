@@ -74,9 +74,15 @@ void l3PTP::updateSockets()
 }
 
 void l3PTP::sendPTPMessage(const uint8_t *buf, int size, bool generalMessage){
-    if(generalMessage){
-        generalSocket->send(adr,generalPort,buf,size);
-    }else{
-        eventSocket->send(adr,eventPort,buf,size);
+    // The result is checked: it used to be discarded entirely, so a Sync
+    // or an Announce that did not go out left the slaves without a
+    // reference with nothing to say so.
+    const bool sent = generalMessage
+        ? generalSocket->send(adr,generalPort,buf,size)
+        : eventSocket->send(adr,eventPort,buf,size);
+
+    if (!sent)
+    {
+        txFailureCount++;
     }
 }

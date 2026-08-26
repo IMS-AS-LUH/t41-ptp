@@ -73,7 +73,11 @@ void l2PTP::updateSockets()
     parsePTPMessage(payloadBuf, payloadSize, recv_ts);
 }
 
-void l2PTP::sendPTPMessage(const uint8_t *buf, int size, bool generalMessage)
+// `generalMessage` is deliberately unused here: at L3 it picks between
+// ports 319 and 320, but at L2 everything goes out under one EtherType
+// and there is nothing to pick. It stays in the signature because the
+// two implementations share it.
+void l2PTP::sendPTPMessage(const uint8_t *buf, int size, bool /*generalMessage*/)
 {
     uint8_t srcmac[6];
     qindesign::network::Ethernet.macAddress(srcmac);
@@ -92,10 +96,13 @@ void l2PTP::sendPTPMessage(const uint8_t *buf, int size, bool generalMessage)
         uint8_t buf0[fill] = {0};
         w+=qindesign::network::EthernetFrame.write(buf0,fill);
     }
-    bool sent=qindesign::network::EthernetFrame.endFrame();
-    /*if(sent){
-        Serial.printf("Sent %d\n",w);
-    }else{
-        Serial.printf("Sent failed %d\n",w);
-    }*/
+    // The result is checked. It used to be collected into a variable
+    // nobody read, with the check commented out just below, so a Sync or
+    // an Announce that did not go out left the slaves without a
+    // reference and nothing said so.
+    const bool sent = qindesign::network::EthernetFrame.endFrame();
+    if (!sent)
+    {
+        txFailureCount++;
+    }
 }
