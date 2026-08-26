@@ -60,15 +60,37 @@ Serial.begin(2000000);
   qindesign::network::EthernetIEEE1588.setChannelInterruptEnable(2, true); //Configure Interrupt generation
 }
 
-bool sync=false;
-bool announce=false;
-bool pps=false;
-int noPPSCount=0;
+// Shared with the interrupt, hence volatile: without it the compiler
+// may keep these in a register inside loop() and never see what
+// interrupt_1588_timer() writes.
+volatile bool sync=false;
+volatile bool announce=false;
+volatile bool pps=false;
+volatile int noPPSCount=0;
 
-NanoTime interrupt_s=0;
-NanoTime interrupt_ns=0;
-NanoTime pps_s=0;
-NanoTime pps_ns=0;
+// These too, but volatile alone is not enough: they are int64_t, and
+// reading 64 bits is NOT ATOMIC on a 32-bit Cortex-M7. An interrupt
+// landing between the two halves leaves loop() with a torn value --
+// half of one second and half of the next -- which is a full second of
+// error on a device built for sub-microsecond accuracy.
+//
+// They are read as a snapshot with interrupts off, in snapshotPPS().
+volatile NanoTime interrupt_s=0;
+volatile NanoTime interrupt_ns=0;
+volatile NanoTime pps_s=0;
+volatile NanoTime pps_ns=0;
+
+// A coherent copy of the four. The window with interrupts disabled is
+// four 64-bit reads and nothing else.
+static void snapshotPPS(NanoTime &ppsTs, NanoTime &localTs)
+{
+    noInterrupts();
+    const NanoTime ps = pps_s, pn = pps_ns, is = interrupt_s, in = interrupt_ns;
+    interrupts();
+
+    ppsTs = (ps*NS_PER_S)+pn;
+    localTs = (is*NS_PER_S)+in;
+}
 
 void loop()
 {
@@ -82,7 +104,11 @@ void loop()
   }
   if(pps){
     pps=false;
-    ptp.ppsInterruptTriggered((pps_s*NS_PER_S)+pps_ns, (interrupt_s*NS_PER_S)+interrupt_ns);
+
+    NanoTime ppsTs, localTs;
+    snapshotPPS(ppsTs, localTs);
+
+    ptp.ppsInterruptTriggered(ppsTs, localTs);
     if(ptp.getLockCount() > 5){
       sync=true;
     }
