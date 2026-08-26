@@ -41,6 +41,16 @@ NanoTime bufferToNanoTime(const uint8_t *buf)
     ns += ((NanoTime)buf[41]) << 16;
     ns += ((NanoTime)buf[42]) << 8;
     ns += ((NanoTime)buf[43]);
+
+    // Clamped before the multiplication. No real timestamp comes near
+    // the limit -- it is 292 years from the epoch -- so this only
+    // touches corrupt or hostile packets, and the jump a clamped value
+    // produces is rejected downstream by the drift guard.
+    if (s > MAX_SAFE_SECONDS)
+    {
+        s = MAX_SAFE_SECONDS;
+    }
+
     return (s * NS_PER_S) + ns;
 }
 

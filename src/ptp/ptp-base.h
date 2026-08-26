@@ -4,6 +4,16 @@ using NanoTime = int64_t;
 
 constexpr NanoTime NS_PER_S = 1000*1000*1000;
 
+// The largest seconds value that can be multiplied by a thousand
+// million without overflowing an int64_t.
+//
+// The seconds field on the wire is 48 bits, so up to
+// 281474976710655, and multiplied by NS_PER_S that is 2.8e23 against
+// the 9.2e18 an int64_t holds. Overflowing a signed integer is
+// undefined behaviour, not a wrong value, and the value is chosen by
+// whoever sends the packet.
+constexpr NanoTime MAX_SAFE_SECONDS = 9223372036;
+
 class PTPBase
 {
 public:
