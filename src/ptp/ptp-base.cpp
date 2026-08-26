@@ -202,6 +202,17 @@ void PTPBase::updateController()
 {
     const double t1diff = (t1 - t1last);
     const double t2diff = (t2 - t2last);
+
+    // Two equal T1 timestamps give 0/0 = NaN, and every comparison with
+    // NaN is false -- so the driftError test below came out false and
+    // the NaN went into the controller as a valid drift. The
+    // single-zero case was already covered by luck: it gives infinity,
+    // and infinity does exceed the threshold.
+    if (t1diff == 0.0)
+    {
+        return;
+    }
+
     const double currentDrift = t2diff / t1diff;
     const double currentDriftNsps = (1.0 - currentDrift) * NS_PER_S;
     
