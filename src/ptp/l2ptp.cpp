@@ -2,6 +2,10 @@
 
 #include "l2ptp.h"
 
+// The largest frame 802.3 allows with a VLAN tag, which is what
+// QNEthernet declares as MAX_FRAME_LEN.
+static constexpr int MAX_ETHERNET_FRAME_LEN = 1522;
+
 using namespace qindesign::network;
 
 l2PTP::l2PTP(bool master_, bool slave_, bool p2p_):
@@ -38,7 +42,14 @@ void l2PTP::updateSockets()
         return;
     }
 
-    uint8_t buf[bufferSize];
+    // A fixed buffer, not a variable-length one: the size of what went
+    // on the stack used to be decided by whoever sent the frame.
+    if (bufferSize > MAX_ETHERNET_FRAME_LEN)
+    {
+        return;
+    }
+
+    uint8_t buf[MAX_ETHERNET_FRAME_LEN];
     //Serial.printf("BufferSize:%d\n",bufferSize);
     const int frameSize = qindesign::network::EthernetFrame.read(buf, bufferSize);
 

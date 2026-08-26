@@ -2,6 +2,17 @@
 
 #include "l3ptp.h"
 
+// The most we read from a datagram. The longest PTP message this library
+// parses is 54 bytes; anything beyond that is TLVs nothing here looks at.
+//
+// A fixed buffer, not a variable-length one. It used to be
+// `uint8_t buf[esize]`, with esize straight from parsePacket(): the size
+// of what went on the stack was decided by whoever sent the packet.
+// Bounded by the frame in the normal case, but IP_REASSEMBLY is on by
+// default in lwIP and is not turned off in QNEthernet's lwipopts.h, so a
+// fragmented datagram can arrive larger.
+static constexpr int PTP_RECV_BUF_LEN = 64;
+
 const IPAddress adr{224, 0, 1, 129};
 const IPAddress pAdr{224, 0, 0, 107};
 const int eventPort = 319;
@@ -36,9 +47,10 @@ void l3PTP::updateSockets()
     {
         timespec erecv_ts;
         eventSocket->timestamp(erecv_ts);
-        uint8_t ebuf[esize];
-        eventSocket->read(ebuf, esize);
-        parsePTPMessage(ebuf,esize,erecv_ts);
+        uint8_t ebuf[PTP_RECV_BUF_LEN];
+        const int en = esize > PTP_RECV_BUF_LEN ? PTP_RECV_BUF_LEN : esize;
+        eventSocket->read(ebuf, en);
+        parsePTPMessage(ebuf,en,erecv_ts);
     }
 
     const int gsize = generalSocket->parsePacket();
@@ -46,9 +58,10 @@ void l3PTP::updateSockets()
     {
         timespec grecv_ts;
         generalSocket->timestamp(grecv_ts);
-        uint8_t gbuf[gsize];
-        generalSocket->read(gbuf, gsize);
-        parsePTPMessage(gbuf,gsize,grecv_ts);
+        uint8_t gbuf[PTP_RECV_BUF_LEN];
+        const int gn = gsize > PTP_RECV_BUF_LEN ? PTP_RECV_BUF_LEN : gsize;
+        generalSocket->read(gbuf, gn);
+        parsePTPMessage(gbuf,gn,grecv_ts);
     }
     if(p2p){
         const int esize = pEventSocket->parsePacket();
@@ -56,9 +69,10 @@ void l3PTP::updateSockets()
         {
             timespec erecv_ts;
             pEventSocket->timestamp(erecv_ts);
-            uint8_t ebuf[esize];
-            pEventSocket->read(ebuf, esize);
-            parsePTPMessage(ebuf,esize,erecv_ts);
+            uint8_t ebuf[PTP_RECV_BUF_LEN];
+            const int en = esize > PTP_RECV_BUF_LEN ? PTP_RECV_BUF_LEN : esize;
+            pEventSocket->read(ebuf, en);
+            parsePTPMessage(ebuf,en,erecv_ts);
         }
 
         const int gsize = pGeneralSocket->parsePacket();
@@ -66,9 +80,10 @@ void l3PTP::updateSockets()
         {
             timespec grecv_ts;
             pGeneralSocket->timestamp(grecv_ts);
-            uint8_t gbuf[gsize];
-            pGeneralSocket->read(gbuf, gsize);
-            parsePTPMessage(gbuf,gsize,grecv_ts);
+            uint8_t gbuf[PTP_RECV_BUF_LEN];
+            const int gn = gsize > PTP_RECV_BUF_LEN ? PTP_RECV_BUF_LEN : gsize;
+            pGeneralSocket->read(gbuf, gn);
+            parsePTPMessage(gbuf,gn,grecv_ts);
         }
     }
 }
