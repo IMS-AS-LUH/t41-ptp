@@ -355,7 +355,11 @@ void PTPBase::parsePTPMessage(const uint8_t *buf, int size, const timespec &recv
         }
         else if(slave && messageType == 8){
             parseFollowUpMessage(buf);
-        }else if(slave && messageType==3 || messageType==9){
+        // The parentheses were missing, and && binds tighter than ||:
+        // this read as (slave && type==3) || (type==9), so message type
+        // 9 was parsed even when the device is not a slave. It was the
+        // only one of the five branches that did not check the role.
+        }else if(slave && (messageType==3 || messageType==9)){
             parseDelayResponseMessage(buf,recv_ts);
         }else if(slave && messageType==10){
             parseDelayResponseFollowUpMessage(buf);
